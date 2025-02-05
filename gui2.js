@@ -299,7 +299,7 @@ function draw_dialog(env, component) {
 	const cto = env.cto;
 
 	cto.fillStyle = '#2d2733';
-	cto.fillRect(component.x + border / 2, component.y + border / 2, component.w, component.h);
+	cto.roundRect(component.x + border / 2, component.y + border / 2, component.w, component.h, 3);
 
 	cto.strokeStyle = 'black';
 	cto.strokeRect(component.x + border / 2, component.y + border / 2, component.w, component.h);
