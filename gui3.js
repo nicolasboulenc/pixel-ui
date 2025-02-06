@@ -1,19 +1,35 @@
 "use strict"
 
 
-function imgui_create(canvas, options) {
+function imgui_create(canvas, settings) {
 
 	const env = {
 		ctx: null,
 		cto: null,
-		options: null,
+		settings: null,
+		next_id: 1,
+		hot_id: 0,
 		active_id: 0,
-		mouse: null,
+		mouse: { x: 0, y: 0, button: false },
 	}
-	env.options = options
+
+	env.settings = settings
 	env.ctx = canvas.getContext("2d")
-	env.cto = new OffscreenCanvas(canvas.width/options.scale, canvas.height/options.scale).getContext("2d")
+	env.ctx.imageSmoothingEnabled = false
+	env.cto = new OffscreenCanvas(canvas.width/settings.scale, canvas.height/settings.scale).getContext("2d")
 	return env
+}
+
+
+function imgui_start(env) {
+	env.next_id = 1
+}
+
+
+function imgui_finish(env) {
+	if(env.mouse.button === false) {
+		env.active_id = 0
+	}
 }
 
 
@@ -22,26 +38,36 @@ function imgui_create(canvas, options) {
 // mouse x, y, buttons
 function imgui_button(env, options) {
 
-	// determine state of the button
-	const settings = env.options.button[component.state]
+	const text_opt = { x: 0, y: 0, text: options.text }
+	let size = imgui_text_size(env, text_opt)
 
-	const border = settings.border
-	const bezel = settings.bezel
-	const padding = settings.padding
+	const border = env.settings.button.border
+	const bezel = env.settings.button.bezel
+	const padding = env.settings.button.padding
+	const w = size.w + border + bezel + padding + padding + bezel + border
+	const h = size.h + border + bezel + padding + padding + bezel + border
+	options.w = w * env.settings.scale
+	options.h = h * env.settings.scale
 
-	const x = options.x
-	const y = options.y
-	const text = options.text
+	if( options.x < env.mouse.x && env.mouse.x < options.x + w * env.settings.scale && 
+		options.y < env.mouse.y && env.mouse.y < options.y + h * env.settings.scale ) {
+		env.hot_id = options.id
+		if(env.active_id === 0 && env.mouse.button === true) {
+			env.active_id = options.id
+		}
+	}
 
+	let state = "default"
+	if(options.id === env.active_id) {
+		state = "active"
+	}
+	const settings = env.settings.button[state]
+
+	const x = 0
+	const y = 0
 	const cto = env.cto
 
-	const t = {
-		x: x + border + bezel + padding,
-		y: y + border + bezel + padding + 1,
-		text: text
-	}
-	let size = draw_text(env, t)
-	ctx.lineCap = 'butt'
+	cto.lineCap = 'butt'
 
 	// draw border
 	cto.beginPath()
@@ -105,11 +131,13 @@ function imgui_button(env, options) {
 	cto.lineTo(x + size.w + border + bezel + padding + padding + bezel, y + size.h + border + bezel + padding + padding + bezel / 2)
 	cto.stroke()
 
-	const w = size.w + border + bezel + padding + padding + bezel
-	const h = size.h + border + bezel + padding + padding + bezel + border
-	ctx.drawImage(cto.canvas, options.x, options.y, w, h);
+	text_opt.x = x + border + bezel + padding
+	text_opt.y = y + border + bezel + padding + 1
+	imgui_text(env, text_opt)
 
-	return { clicked: false, w: w, h: h }
+	env.ctx.drawImage(cto.canvas, x, y, w, h, options.x, options.y, options.w, options.h)
+
+	return (env.active_id === options.id && env.mouse.button === false)
 }
 
 
@@ -118,13 +146,15 @@ function imgui_button(env, options) {
 // mouse x, y, buttons
 function imgui_text(env, options) {
 
-	const sh = 7
-	const sy = 0
-	const gap = 1
+	const sh = env.settings.font.sh
+	const sy = env.settings.font.sy
+	const gap = env.settings.font.gap
+	const img = env.settings.font.img
+	const metrics = env.settings.font.metrics
 
-	const x = component.x
-	const y = component.y
-	const text = component.text
+	const x = options.x
+	const y = options.y
+	const text = options.text
 
 	const cto = env.cto
 
@@ -140,12 +170,9 @@ function imgui_text(env, options) {
 			offset_x = 0
 		}
 		else {
-
-			let metrics = font_metrics[letter]
-
 			// image, sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight
-			let sx = metrics[0]
-			let sw = metrics[1]
+			let sx = metrics[letter][0]
+			let sw = metrics[letter][1]
 
 			let dx = x + offset_x
 			let dy = y + offset_y
@@ -153,7 +180,7 @@ function imgui_text(env, options) {
 			let dh = sh
 			offset_x += dw + gap
 
-			cto.drawImage(font, sx, sy, sw, sh, dx, dy, dw, dh)
+			cto.drawImage(img, sx, sy, sw, sh, dx, dy, dw, dh)
 		}
 
 		if(width < offset_x) {
@@ -164,7 +191,37 @@ function imgui_text(env, options) {
 		}
 	}
 
-	height += sh
-	width -= gap
+	options.h += sh
+	options.w -= gap
+	env.ctx.drawImage(cto.canvas, options.x, options.y, width, height);
+}
+
+
+function imgui_text_size(env, options) {
+
+	// I dont think the width works on multiline
+
+	let offset_x = 0
+	let offset_y = 0
+
+	for(let letter of options.text) {
+
+		if(letter === '\n') {
+			offset_y += env.settings.font.sh
+			offset_x = 0
+		}
+		else {
+			offset_x += env.settings.font.metrics[letter][1] + env.settings.font.gap
+		}
+	}
+
+	const width = offset_x - env.settings.font.gap
+	const height = offset_y + env.settings.font.sh
 	return { w: width, h: height }
+}
+
+
+function imgui_generate_id(env) {
+	const id = `id${env.next_id++}`
+	return id
 }

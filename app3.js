@@ -1,84 +1,84 @@
-"use strict";
+"use strict"
 
-let ctx = null;
+window.addEventListener('load', window_on_load)
 
-const font = new Image();
-font.src = 'font2.png';
-font.onload = function(evt) { console.log('font loaded.'); };
-
-window.addEventListener('load', window_on_load);
+let env = null
+let canvas = null
 
 const settings = {
 	scale: 2,
+	font: null,
 	button: {
+		border: 1,
+		bezel: 1,
+		padding: 3,
 		default: {
-			border: 1,
 			border_color: '#070511',
-			bezel: 1,
 			bezel_colors: ['#434048', '#1f1825', '#5e5965', '#393542'],
-			padding: 1
 		},
-		down: {
-			border: 1,
+		active: {
 			border_color: '#070511',
-			bezel: 1,
 			bezel_colors: ['#27222a', '#2d2733', '#27222a', '#2d2733'],
-			padding: 1
 		}
 	}
-};
-let env = null;
-let button1 = null
+}
+
 
 function window_on_load(evt) {
 
-	const canvas = document.getElementById('canvas');
-	canvas.width = canvas.clientWidth;
-	canvas.height = canvas.clientHeight;
-	ctx = canvas.getContext('2d');
-	ctx.imageSmoothingEnabled = false;
+	canvas = document.getElementById('canvas')
+	canvas.width = canvas.clientWidth
+	canvas.height = canvas.clientHeight
+	canvas.addEventListener("mousemove", canvas_on_mousemove)
+	canvas.addEventListener("mousedown", canvas_on_mousedown)
+	canvas.addEventListener("mouseup", canvas_on_mouseup)
 
-	env = gui_init(canvas, settings);
+	settings.font = typeof font !== "undefined" ? font : null
+	env = imgui_create(canvas, settings)
 
-	const dialog = gui_create(env, { class: "dialog", x: 70, y: 70, w: 100, h: 50, title: "Dialog box", text: "Would you like\nto do this?!" });
-	dialog.onok = dialog_on_ok;
-	dialog.oncancel = dialog_on_cancel;
-
-	gui_create(env, { class: "text", x: 5, y: 5, text: "How are you today, Papa?" });
-
-	button1 = gui_create(env, { class: "button", x: 5, y: 15, text: "Good, thank you." });
-	button1.onmousedown = button1_on_mousedown;
-
-	const button2 = gui_create(env, { class: "button", x: 5, y: 35, text: "Not very well, thank you." });
-	button2.onmousedown = button2_on_mousedown;
-
-	loop();
+	loop()
 }
 
 
 function loop(timestamp) {
 
-	let cto = gui_render(env);
-	ctx.drawImage(cto.canvas, 0, 0, ctx.canvas.width, ctx.canvas.height);
-	window.requestAnimationFrame(loop);
+	imgui_start(env)
+
+	const button = { id: imgui_generate_id(env), x: 100, y: 50, text: "test" }
+	if( imgui_button(env, button) ) {
+		console.log("test")
+	}
+	document.querySelector(".debug > .right").innerHTML = `x: ${button.x} y: ${button.y} w: ${button.w} h: ${button.h} `
+
+
+	imgui_finish(env)
+
+	window.requestAnimationFrame(loop)
 }
 
 
-function button1_on_mousedown(evt) {
-	console.log('Good, Thank You.')
+function canvas_on_mousemove(evt) {
+	let brect = canvas.getBoundingClientRect()
+	env.mouse.x = evt.clientX - brect.left
+	env.mouse.y = evt.clientY - brect.top
+	document.querySelector(".debug > .left").innerHTML = `x: ${env.mouse.x} y: ${env.mouse.y} b: ${env.mouse.button}`
 }
 
 
-function button2_on_mousedown(evt) {
-	console.log('Not very well, thank you.');
+function canvas_on_mousedown(evt) {
+	let brect = canvas.getBoundingClientRect()
+	env.mouse.x = evt.clientX - brect.left
+	env.mouse.y = evt.clientY - brect.top
+	env.mouse.button = true
+	document.querySelector(".debug > .left").innerHTML = `x: ${env.mouse.x} y: ${env.mouse.y} b: ${env.mouse.button}`
 }
 
 
-function dialog_on_ok(evt) {
-	console.log('Ok');
+function canvas_on_mouseup(evt) {
+	let brect = canvas.getBoundingClientRect()
+	env.mouse.x = evt.clientX - brect.left
+	env.mouse.y = evt.clientY - brect.top
+	env.mouse.button = false
+	document.querySelector(".debug > .left").innerHTML = `x: ${env.mouse.x} y: ${env.mouse.y} b: ${env.mouse.button}`
 }
 
-
-function dialog_on_cancel(evt) {
-	console.log('Cancel');
-}

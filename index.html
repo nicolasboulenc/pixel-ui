@@ -1,35 +1,59 @@
 <!DOCTYPE html>
 <html>
-    <head>
-        <style>
-            html {
-                overflow-x: hidden;
-                overflow-y: hidden;
-                background-color: gray;
-            }
+	<head>
+		<style>
+			body {
+				width: 100vw;
+				height: 100vh;
+				overflow-x: hidden;
+				overflow-y: hidden;
+				background-color: gray;
+				margin: 0;
+				padding: 0;
+			}
 
-            div {
-                display: flex;
-                justify-content: center;
-                align-items: center;
-                width: 100vw;
-                height: 100vh;
-            }
+			div.container {
+				position: relative;
+				display: flex;
+				justify-content: center;
+				align-items: center;
+				width: 100vw;
+				height: 100vh;
+			}
 
-            canvas {
-                width: 1000px;
-                height: 1000px;
-                border: 1px dashed grey;
-                background-color: #2d2733;
-            }
-        </style>
-    </head>
-    <body>
-        <div>
-            <canvas id="canvas"></canvas>
-        </div>
-        <script src="gui3.js"></script>
-        <script src="font.js"></script>
-        <script src="app3.js"></script>
-    </body>
+			canvas {
+				width: 800px;
+				height: 800px;
+				border: 1px dashed grey;
+				background-color: #2d2733;
+			}
+
+			.debug {
+				position: absolute;
+				left: 0;
+				top: 0;
+				width: 100svw;
+				height: 20px;
+				user-select: none;
+				display: flex;
+			}
+
+			.debug > div {
+				flex: 1 1 0;
+			}
+
+		</style>
+	</head>
+	<body>
+		<div class="container">
+			<div class="debug">
+				<div class="left"></div>
+				<div class="right"></div>
+			</div>
+			<canvas id="canvas"></canvas>
+		</div>
+		<script src="gui3.js"></script>
+		<script src="font.js"></script>
+		<script src="app3.js"></script>
+	</body>
 </html>
