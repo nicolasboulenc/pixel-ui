@@ -10,7 +10,7 @@ function imgui_create(canvas, settings) {
 		next_id: 1,
 		hot_id: 0,
 		active_id: 0,
-		mouse: { x: 0, y: 0, button: false },
+		mouse: { x: 0, y: 0, button: false, button_changed_state: false },
 	}
 
 	env.settings = settings
@@ -29,6 +29,9 @@ function imgui_start(env) {
 function imgui_finish(env) {
 	if(env.mouse.button === false) {
 		env.active_id = 0
+	}
+	if(env.mouse.button_changed_state === true) {
+		env.mouse.button_changed_state = false
 	}
 }
 
@@ -49,12 +52,17 @@ function imgui_button(env, options) {
 	options.w = w * env.settings.scale
 	options.h = h * env.settings.scale
 
-	if( options.x < env.mouse.x && env.mouse.x < options.x + w * env.settings.scale && 
-		options.y < env.mouse.y && env.mouse.y < options.y + h * env.settings.scale ) {
+	const is_hot =	options.x < env.mouse.x && env.mouse.x < options.x + w * env.settings.scale && 
+					options.y < env.mouse.y && env.mouse.y < options.y + h * env.settings.scale
+
+	if(is_hot) {
 		env.hot_id = options.id
-		if(env.active_id === 0 && env.mouse.button === true) {
-			env.active_id = options.id
-		}
+	}
+	else if(env.hot_id === options.id) {
+		env.hot_id = 0
+	}
+	if(env.hot_id === options.id && env.active_id === 0 && env.mouse.button === true && env.mouse.button_changed_state === true) {
+		env.active_id = options.id
 	}
 
 	let state = "default"
@@ -149,7 +157,8 @@ function imgui_button(env, options) {
 
 	env.ctx.drawImage(cto.canvas, x, y, w, h, options.x, options.y, options.w, options.h)
 
-	return (env.active_id === options.id && env.mouse.button === false)
+	const trigger = (env.active_id === options.id && env.hot_id === options.id && env.mouse.button === false)
+	return trigger
 }
 
 
@@ -235,7 +244,7 @@ function imgui_text_size(env, options) {
 
 function imgui_slider(env, options) {
 
-	const text_opt = { x: 0, y: 0, text: `${options.value}` }
+	const text_opt = { x: 0, y: 0, text: `${options.value.current}` }
 	let size = imgui_text_size(env, text_opt)
 
 	const border = env.settings.slider.border
@@ -246,12 +255,25 @@ function imgui_slider(env, options) {
 	// options.w = w * env.settings.scale
 	options.h = h * env.settings.scale
 
-	if( options.x < env.mouse.x && env.mouse.x < options.x + w * env.settings.scale && 
-		options.y < env.mouse.y && env.mouse.y < options.y + h * env.settings.scale ) {
+	const is_hot =	options.x < env.mouse.x && env.mouse.x < options.x + w * env.settings.scale && 
+					options.y < env.mouse.y && env.mouse.y < options.y + h * env.settings.scale
+	if(is_hot) {
 		env.hot_id = options.id
-		if(env.active_id === 0 && env.mouse.button === true) {
-			env.active_id = options.id
-		}
+	}
+	else if(env.hot_id === options.id) {
+		env.hot_id = 0
+	}
+	if(env.hot_id === options.id && env.active_id === 0 && env.mouse.button === true && env.mouse.button_changed_state === true) {
+		env.active_id = options.id
+	}
+
+	let value = options.value.current
+	if(env.active_id === options.id && env.mouse.button === true) {
+		const offset = (env.mouse.x - options.x - border * env.settings.scale - bezel * env.settings.scale)
+		const ratio = offset / (options.w - border * env.settings.scale * 2 - bezel * env.settings.scale * 2)
+		value = Math.round(options.value.min + (options.value.max - options.value.min) * ratio)
+		value = Math.max(value, options.value.min)
+		value = Math.min(value, options.value.max)
 	}
 
 	let state = "default"
@@ -288,32 +310,55 @@ function imgui_slider(env, options) {
 	cto.lineTo(x + border12, y + border)
 	cto.stroke()
 
-	// draw bezel
 	const bezel12 = bezel / 2
+	// draw meter
+	const mw = Math.floor((w - border - border) / (options.value.max - options.value.min) * (value - options.value.min))
+	if(mw > 0) {
+		cto.beginPath()
+		cto.strokeStyle = env.settings.slider.meter.bezel_colors[0]
+		cto.lineWidth = bezel
+		// left line
+		cto.moveTo(x + border + bezel12, y + borderh)
+		cto.lineTo(x + border + bezel12, y + border + bezel12)
+		// top line
+		cto.moveTo(x + border + bezel12, y + border + bezel12)
+		cto.lineTo(x + mw - bezel12, y + border + bezel12)
+		if(value === options.value.max) {
+			// right line
+			cto.moveTo(x + borderw - bezel12, y + border + bezel12)
+			cto.lineTo(x + borderw - bezel12, y + borderh)
+		}
+		cto.stroke()
+
+		cto.fillStyle = env.settings.slider.meter.background_color;
+		cto.fillRect(x + border + bezel, y + border + bezel, mw, borderh - border - border - bezel);
+	}
+
 	// draw bottom bezel
 	cto.beginPath()
 	cto.strokeStyle = settings.bezel_colors[1]
-	cto.moveTo(x + borderw, y + borderh - bezel12)
-	cto.lineTo(x + border, y + borderh - bezel12)
+	cto.moveTo(x + border + mw, y + borderh - bezel12)
+	cto.lineTo(x + border + borderw, y + borderh - bezel12)
 	cto.stroke()
 
 	cto.beginPath()
 	cto.strokeStyle = settings.bezel_colors[0]
 	cto.lineWidth = bezel
 	// left line
-	cto.moveTo(x + border + bezel12, y + borderh)
-	cto.lineTo(x + border + bezel12, y + border + bezel12)
+	// cto.moveTo(x + border + bezel12, y + borderh)
+	// cto.lineTo(x + border + bezel12, y + border + bezel12)
 	// top line
-	// cto.moveTo(x + border + bezel12, y + border + bezel12)
+	cto.moveTo(x + border + mw + bezel12, y + border + bezel12)
 	cto.lineTo(x + borderw - bezel12, y + border + bezel12)
 	// right line
 	// cto.moveTo(x + borderw - bezel12, y + border + bezel12)
-	cto.lineTo(x + borderw - bezel12, y + borderh)
+	// cto.lineTo(x + borderw - bezel12, y + borderh)
 	cto.stroke()
 
 	// fill inside borders
 	cto.fillStyle = settings.background_color;
-	cto.fillRect(x + border + bezel, y + border + bezel, borderw - border - border - bezel, borderh - border - border - bezel);
+	cto.fillRect(x + border + mw, y + border + bezel, borderw - border - border + bezel, borderh - border - border - bezel);
+
 
 	// draw top corners
 	cto.beginPath()
@@ -337,13 +382,13 @@ function imgui_slider(env, options) {
 	cto.lineTo(x + borderw - bezel12, y + borderh - bezel12)
 	cto.stroke()
 
-	text_opt.x = x + border + bezel + padding
+	text_opt.text = value.toString()
+	text_opt.x = x + Math.floor((w - size.w) / 2)
 	text_opt.y = y + border + bezel + padding + 1
 	imgui_text(env, text_opt)
 
 	env.ctx.drawImage(cto.canvas, x, y, w, h, options.x, options.y, options.w, options.h)
-
-	return (env.active_id === options.id && env.mouse.button === false)
+	return value
 }
 
 function imgui_generate_id(env) {

@@ -4,6 +4,7 @@ window.addEventListener('load', window_on_load)
 
 let env = null
 let canvas = null
+let slider_value = 80
 
 const settings = {
 	scale: 6,
@@ -28,15 +29,18 @@ const settings = {
 		bezel: 1,
 		padding: 3,
 		default: {
+			background_color: '#2d2733',
 			border_color: '#070511',
-			bezel_colors: ['#434048', '#1f1825', '#5e5965', '#393542'],
+			bezel_colors: ['#434048', '#1f1825', '#5e5965', '#393542'],	// 0=top, left, right 1=bottom 2=top corners 3=bottom corners
 		},
-		fill: {
-			border_color: '#070511',
-			bezel_colors: ['#27222a', '#2d2733', '#27222a', '#2d2733'],
+		meter: {
+			background_color: '#aaa6ae',
+			bezel_colors: ['#c1c1c3', '#aaa6ae', '#c1c1c3', '#aaa6ae'],	// 0=top, left, right 1=bottom 2=top corners 3=bottom corners
 		}
 	}
 }
+
+
 
 
 function window_on_load(evt) {
@@ -65,8 +69,12 @@ function loop(timestamp) {
 	}
 	// document.querySelector(".debug > .right").innerHTML = `x: ${button.x} y: ${button.y} w: ${button.w} h: ${button.h} `
 
-	const slider = { id: imgui_generate_id(env), x: 100, y: 100, w: 400, value: 80 }
-	imgui_slider(env, slider)
+	const slider = { id: imgui_generate_id(env), x: 100, y: 100, w: 400, value: { min: 0, max: 100, current: slider_value } }
+	let v = imgui_slider(env, slider)
+	if(v !== slider_value) {
+		slider_value = v
+		console.log(slider_value)
+	}
 
 	imgui_finish(env)
 
@@ -87,6 +95,7 @@ function canvas_on_mousedown(evt) {
 	env.mouse.x = evt.clientX - brect.left
 	env.mouse.y = evt.clientY - brect.top
 	env.mouse.button = true
+	env.mouse.button_changed_state = true
 	document.querySelector(".debug > .left").innerHTML = `x: ${env.mouse.x} y: ${env.mouse.y} b: ${env.mouse.button}`
 }
 
@@ -96,6 +105,7 @@ function canvas_on_mouseup(evt) {
 	env.mouse.x = evt.clientX - brect.left
 	env.mouse.y = evt.clientY - brect.top
 	env.mouse.button = false
+	env.mouse.button_changed_state = true
 	document.querySelector(".debug > .left").innerHTML = `x: ${env.mouse.x} y: ${env.mouse.y} b: ${env.mouse.button}`
 }
 
