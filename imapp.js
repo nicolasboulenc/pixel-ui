@@ -13,10 +13,25 @@ const settings = {
 		bezel: 1,
 		padding: 3,
 		default: {
+			background_color: '#2d2733',
 			border_color: '#070511',
 			bezel_colors: ['#434048', '#1f1825', '#5e5965', '#393542'],
 		},
 		active: {
+			background_color: '#2d2733',
+			border_color: '#070511',
+			bezel_colors: ['#27222a', '#2d2733', '#27222a', '#2d2733'],
+		}
+	},
+	slider: {
+		border: 1,
+		bezel: 1,
+		padding: 3,
+		default: {
+			border_color: '#070511',
+			bezel_colors: ['#434048', '#1f1825', '#5e5965', '#393542'],
+		},
+		fill: {
 			border_color: '#070511',
 			bezel_colors: ['#27222a', '#2d2733', '#27222a', '#2d2733'],
 		}
@@ -44,12 +59,14 @@ function loop(timestamp) {
 
 	imgui_start(env)
 
-	const button = { id: imgui_generate_id(env), x: 100, y: 50, text: "test" }
+	const button = { id: imgui_generate_id(env), x: 400, y: 400, text: "test" }
 	if( imgui_button(env, button) ) {
 		console.log("test")
 	}
-	document.querySelector(".debug > .right").innerHTML = `x: ${button.x} y: ${button.y} w: ${button.w} h: ${button.h} `
+	// document.querySelector(".debug > .right").innerHTML = `x: ${button.x} y: ${button.y} w: ${button.w} h: ${button.h} `
 
+	const slider = { id: imgui_generate_id(env), x: 100, y: 100, w: 400, value: 80 }
+	imgui_slider(env, slider)
 
 	imgui_finish(env)
 
