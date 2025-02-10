@@ -6,7 +6,7 @@ let env = null
 let canvas = null
 
 const settings = {
-	scale: 2,
+	scale: 6,
 	font: null,
 	button: {
 		border: 1,

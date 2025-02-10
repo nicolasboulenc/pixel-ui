@@ -238,12 +238,12 @@ function imgui_slider(env, options) {
 	const text_opt = { x: 0, y: 0, text: `${options.value}` }
 	let size = imgui_text_size(env, text_opt)
 
-	const border = env.settings.button.border
-	const bezel = env.settings.button.bezel
-	const padding = env.settings.button.padding
-	const w = size.w + border + bezel + padding + padding + bezel + border
+	const border = env.settings.slider.border
+	const bezel = env.settings.slider.bezel
+	const padding = env.settings.slider.padding
+	const w = Math.floor(options.w / env.settings.scale) + ( options.w % env.settings.scale > 0 ? 1 : 0 )
 	const h = size.h + border + bezel + padding + padding + bezel + border
-	options.w = w * env.settings.scale
+	// options.w = w * env.settings.scale
 	options.h = h * env.settings.scale
 
 	if( options.x < env.mouse.x && env.mouse.x < options.x + w * env.settings.scale && 
@@ -255,10 +255,7 @@ function imgui_slider(env, options) {
 	}
 
 	let state = "default"
-	if(options.id === env.active_id) {
-		state = "active"
-	}
-	const settings = env.settings.button[state]
+	const settings = env.settings.slider[state]
 
 	const x = 0
 	const y = 0
