@@ -31,11 +31,8 @@ const settings = {
 		default: {
 			background_color: '#2d2733',
 			border_color: '#070511',
-			bezel_colors: ['#434048', '#1f1825', '#5e5965', '#393542'],	// 0=top, left, right 1=bottom 2=top corners 3=bottom corners
-		},
-		meter: {
-			background_color: '#aaa6ae',
-			bezel_colors: ['#c1c1c3', '#aaa6ae', '#c1c1c3', '#aaa6ae'],	// 0=top, left, right 1=bottom 2=top corners 3=bottom corners
+			bezel_colors: ['#c1c1c3', '#3d3d3d', '#5e5965', '#393542'],	// 0=top, left, right 1=bottom 2=top corners 3=bottom corners
+			meter_color: '#aaa6ae'
 		}
 	}
 }
@@ -69,11 +66,11 @@ function loop(timestamp) {
 	}
 	// document.querySelector(".debug > .right").innerHTML = `x: ${button.x} y: ${button.y} w: ${button.w} h: ${button.h} `
 
-	const slider = { id: imgui_generate_id(env), x: 100, y: 100, w: 400, value: { min: 0, max: 100, current: slider_value } }
+	const slider = { id: imgui_generate_id(env), x: 100, y: 100, w: 612, value: { min: 0, max: 100, current: slider_value } }
 	let v = imgui_slider(env, slider)
 	if(v !== slider_value) {
 		slider_value = v
-		console.log(slider_value)
+		// console.log(slider_value)
 	}
 
 	imgui_finish(env)

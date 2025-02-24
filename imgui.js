@@ -14,6 +14,7 @@ function imgui_create(canvas, settings) {
 	}
 
 	env.settings = settings
+	// env.ctx = canvas.getContext("2d", { alpha: false })
 	env.ctx = canvas.getContext("2d")
 	env.ctx.imageSmoothingEnabled = false
 	env.cto = new OffscreenCanvas(canvas.width/settings.scale, canvas.height/settings.scale).getContext("2d")
@@ -269,8 +270,8 @@ function imgui_slider(env, options) {
 
 	let value = options.value.current
 	if(env.active_id === options.id && env.mouse.button === true) {
-		const offset = (env.mouse.x - options.x - border * env.settings.scale - bezel * env.settings.scale)
-		const ratio = offset / (options.w - border * env.settings.scale * 2 - bezel * env.settings.scale * 2)
+		const offset = (env.mouse.x - options.x - border * env.settings.scale)
+		const ratio = offset / (options.w - border * env.settings.scale * 2)
 		value = Math.round(options.value.min + (options.value.max - options.value.min) * ratio)
 		value = Math.max(value, options.value.min)
 		value = Math.min(value, options.value.max)
@@ -314,79 +315,81 @@ function imgui_slider(env, options) {
 	// draw meter
 	const mw = Math.floor((w - border - border) / (options.value.max - options.value.min) * (value - options.value.min))
 	if(mw > 0) {
+		cto.fillStyle = settings.meter_color;
+		cto.fillRect(x + border + bezel, y + border + bezel, mw - border - bezel, borderh - border - border - bezel);
+
 		cto.beginPath()
-		cto.strokeStyle = env.settings.slider.meter.bezel_colors[0]
+		cto.strokeStyle = settings.bezel_colors[0]
 		cto.lineWidth = bezel
 		// left line
 		cto.moveTo(x + border + bezel12, y + borderh)
 		cto.lineTo(x + border + bezel12, y + border + bezel12)
 		// top line
 		cto.moveTo(x + border + bezel12, y + border + bezel12)
-		cto.lineTo(x + mw - bezel12, y + border + bezel12)
+		cto.lineTo(x + mw, y + border + bezel12)
 		if(value === options.value.max) {
 			// right line
-			cto.moveTo(x + borderw - bezel12, y + border + bezel12)
-			cto.lineTo(x + borderw - bezel12, y + borderh)
+			cto.moveTo(x + w - border - bezel12, y + border)
+			cto.lineTo(x + w - border - bezel12, y + borderh)
 		}
 		cto.stroke()
 
-		cto.fillStyle = env.settings.slider.meter.background_color;
-		cto.fillRect(x + border + bezel, y + border + bezel, mw, borderh - border - border - bezel);
+		cto.beginPath()
+		cto.strokeStyle = settings.bezel_colors[1]
+		cto.lineWidth = bezel
+		// top line
+		cto.moveTo(x + border + bezel12, y + borderh - bezel12)
+		cto.lineTo(x + mw, y + borderh - bezel12)
+		cto.stroke()
 	}
 
-	// draw bottom bezel
-	cto.beginPath()
-	cto.strokeStyle = settings.bezel_colors[1]
-	cto.moveTo(x + border + mw, y + borderh - bezel12)
-	cto.lineTo(x + border + borderw, y + borderh - bezel12)
-	cto.stroke()
-
-	cto.beginPath()
-	cto.strokeStyle = settings.bezel_colors[0]
-	cto.lineWidth = bezel
-	// left line
-	// cto.moveTo(x + border + bezel12, y + borderh)
-	// cto.lineTo(x + border + bezel12, y + border + bezel12)
-	// top line
-	cto.moveTo(x + border + mw + bezel12, y + border + bezel12)
-	cto.lineTo(x + borderw - bezel12, y + border + bezel12)
-	// right line
-	// cto.moveTo(x + borderw - bezel12, y + border + bezel12)
-	// cto.lineTo(x + borderw - bezel12, y + borderh)
-	cto.stroke()
-
 	// fill inside borders
-	cto.fillStyle = settings.background_color;
-	cto.fillRect(x + border + mw, y + border + bezel, borderw - border - border + bezel, borderh - border - border - bezel);
+	if(mw < (w - border - border)) {
+		cto.fillStyle = settings.background_color;
+		cto.fillRect(x + mw, y + border, w - mw - border, borderh - border);
+	}
 
 
 	// draw top corners
-	cto.beginPath()
 	cto.strokeStyle = settings.bezel_colors[2]
 	// top left
-	cto.moveTo(x + border + bezel12, y + border)
-	cto.lineTo(x + border + bezel12, y + border + bezel12)
+	if(mw > 0) {
+		cto.beginPath()
+		cto.moveTo(x + border + bezel12, y + border)
+		cto.lineTo(x + border + bezel12, y + border + bezel12)
+		cto.stroke()
+	}
 	// top right
-	cto.moveTo(x + borderw - bezel12, y + border)
-	cto.lineTo(x + borderw - bezel12, y + border + bezel12)
-	cto.stroke()
+	if(mw == (w - border - border)) {
+		cto.beginPath()
+		cto.moveTo(x + borderw - bezel12, y + border)
+		cto.lineTo(x + borderw - bezel12, y + border + bezel12)
+		cto.stroke()
+	}
 
 	// draw bottom corners
-	cto.beginPath()
 	cto.strokeStyle = settings.bezel_colors[3]
 	// bottom left
-	cto.moveTo(x + border + bezel12, y + borderh)
-	cto.lineTo(x + border + bezel12, y + borderh - bezel12)
+	if(mw > 0) {
+		cto.beginPath()
+		cto.moveTo(x + border + bezel12, y + borderh)
+		cto.lineTo(x + border + bezel12, y + borderh - bezel12)
+		cto.stroke()
+	}
 	// bottom right
-	cto.moveTo(x + borderw - bezel12, y + borderh)
-	cto.lineTo(x + borderw - bezel12, y + borderh - bezel12)
-	cto.stroke()
+	if(mw == (w - border - border)) {
+		cto.beginPath()
+		cto.moveTo(x + borderw - bezel12, y + borderh)
+		cto.lineTo(x + borderw - bezel12, y + borderh - bezel12)
+		cto.stroke()
+	}
 
 	text_opt.text = value.toString()
 	text_opt.x = x + Math.floor((w - size.w) / 2)
 	text_opt.y = y + border + bezel + padding + 1
 	imgui_text(env, text_opt)
 
+	// env.ctx.clearRect(options.x, options.y, options.w, options.h)
 	env.ctx.drawImage(cto.canvas, x, y, w, h, options.x, options.y, options.w, options.h)
 	return value
 }
