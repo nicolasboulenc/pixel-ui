@@ -1,5 +1,7 @@
 "use strict"
 
+// https://www.johno.se/book/imgui.html
+// https://solhsa.com/imgui/
 
 function imgui_create(canvas, settings) {
 
